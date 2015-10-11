@@ -25,38 +25,105 @@ class Dir
   end
 end
 
-module ComicRenamer
+class String
   
-  def self.handle(comic_arr, dir, args)
-    @opts = args
-    comic_arr.each do |title| 
-      content = Content.new(title, dir, @opts.unwanted, @opts.replacement)
-      comic = content.name
-      comic.gsub!(/(.*?\d{2,}).*/) { $1 }
-      comic.gsub!(/\s(\d{2,3})/) do |match|
+  def clean!
+    gsub!(".#{ext}", '')
+    gsub!("AwesomeDL.com_", '')
+    gsub!(/\_|\[|\]|\(|\)|\#|\+/, " ")
+    strip!
+  	gsub!(/\s+/, "\s")
+  	gsub!("-", " ") if is_tv?
+  	gsub!("&#x27;", "'")
+  	gsub!("&#x26;", "&")
+  	gsub!("&\s39;", "'")
+  	gsub!("[\W&&[^\s-\.]]", "")
+  	gsub!(/^(.)/) { |m| $1.capitalize }
+    gsub!(/\s(.)/) { |m| "\s#{$1.capitalize}" }
+  end
+  
+  def conform!
+    extension = ext
+    puts extension
+    if is_tv?
+      gsub!(/\./, " ")
+      gsub!(/\s(.)/) { |m| "\s#{$1.capitalize}" }
+      long_lormat!
+      regex!
+    elsif is_comic?
+      gsub!(/(.*?\d{2,}).*/) { $1 }
+      gsub!(/\s(\d{2,3})/) do |match|
         length = 3 - match.to_i.to_s.length
               " #{"0" * length}#{match.to_i}"
       end
-      content.name = comic
-      AutoWarez::filter(comic)
-      self::rename content
+      capitalize!
+      filter!
     end
   end
   
-  def self.rename(content) 
-    return if not (content.name =~ /(.*)\s(\d{2})/) or not @opts.rename
+  def long_lormat!
+  	gsub!('Season ', 'S0')
+  	gsub!(' Episode ', 'E')
+  	gsub!('EP', 'E');
+  	[ 'season', 'episode', 'SERIES', 'EPISODE' ].each { |e| gsub!(e, '') }
+  	(1960..Time.new.year).each { |val| gsub!(val.to_s, '') }
+  end
+  
+  def regex!
+    puts "llS"
+    gsub!(/((\d\d)(\d\d))/) { " S#{$2}E#{$3}" }
+  	gsub!(/((\d\d)x(\d\d))/) { " S#{$2}E#{$3}" }
+  	gsub!(/((\d)x(\d\d))/) { " S0#{$2}E#{$3}" }
+  	gsub!(/(\s(\d)(\d\d))/) { " S0#{$2}E#{$3}" }
+    gsub!(/(.*?)[Ss](\d\d.*)/) { "#{$1}S#{$2}" }  
+    gsub!(/(.*?\s[Ee])\s(.*)/) { "#{$1}#{$2}" }   	
+   	gsub!(/(.*?)([EeSs])(\d\d)/) { "#{$1}#{$2.capitalize}#{$3}" }
+   	gsub!(/(.*[Ee]\d\d).*/) { $1 }
+   	gsub!(/(.*[Ss]\d\d)(\d\d).*/) { "#{$1}E#{$2}" }
+   	gsub!(/(.*)([Ss]\d[^\s].*)/) { "#{$1} #{$2}" }   	
+   	gsub!(/(.*)[Xx]([Ee].*)/) { "#{$1}#{$2}" }
+   	gsub!(/(.*\d\d)[Ee](\d\d.*)/) { "#{$1}E#{$2}" }  
+   	gsub!(/\s\s+/, "\s"); 
+   	gsub!(/(S\d\d)\s(E\d\d.*)/) { "#{$1}#{$2}" }    	
+   	gsub!(self, $1) if (self =~ /(.*?\sS\d\dE\d\d)(.*)/)
+  end
+  
+  def filter!
+    File.open(File.join(File.dirname(__FILE__), 'filters.txt'), "r").each_line do |line|
+      data = line.split(/=/)
+      unwanted = data.first
+      replacement = data.last.gsub("\n","")
+      substitute = (replacement == "REMOVE" ? "" : replacement)
+      gsub!(unwanted, substitute)
+    end
+  end
+  
+end
+
+module ComicRenamer
+  
+  def self.handle(arr, dir, args)
+    arr.each do |title| 
+      comic = Content.new(title, dir, args.unwanted, args.replacement)
+      comic.name.conform!
+      self::rename comic, args
+    end
+  end
+  
+  def self.rename(content, args) 
+    return if not (content.name =~ /(.*)\s(\d{2})/) or not args.rename
     name = "#{content.name.strip}.#{content.orig_name.ext.downcase}"
     dir = content.directory
     orig = content.orig_name
-    if @opts.create and not @opts.move
+    if args.create and not args.move
       FileUtils.mkdir_p("#{dir}/#{$1}")
       AutoWarez::rename(content, "#{dir}/#{orig}", "#{dir}/#{$1}/#{name}") 
-    elsif @opts.create and @opts.move
-      FileUtils.mkdir_p("#{@opts.comics}/#{$1}")
-      AutoWarez::rename(content, "#{dir}/#{orig}", "#{@opts.comics}/#{$1}/#{name}")
-    elsif not @opts.create and @opts.move 
-      AutoWarez::rename(content, "#{dir}/#{orig}", "#{@opts.comics}/#{name}")
-    elsif not @opts.create and not @opts.move
+    elsif args.create and args.move
+      FileUtils.mkdir_p("#{args.comics}/#{$1}")
+      AutoWarez::rename(content, "#{dir}/#{orig}", "#{args.comics}/#{$1}/#{name}")
+    elsif not args.create and args.move 
+      AutoWarez::rename(content, "#{dir}/#{orig}", "#{args.comics}/#{name}")
+    elsif not args.create and not args.move
       AutoWarez::rename(content, "#{dir}/#{orig}", "#{dir}/#{name}")
     end
   end
@@ -66,60 +133,19 @@ end
 module TVRenamer
   
   def self.handle(tv_arr, dir, args)
-    @opts = args
-    tv_arr.each do |a| 
-      tv = Content.new(a, dir)
-      a.gsub!(@opts.unwanted, @opts.replacement)
-      tv.name.gsub!(/\./, " ")
-      tv.name.gsub!(/\s(.)/) { |m| "\s#{$1.capitalize}" }
-      self::long_lormat tv.name
-      self::regexes tv.name
-      # AutoWarez::conformToRegex tv
-      self::rename tv
+    tv_arr.each do |title| 
+      tv = Content.new(title, dir)
+      tv.name.gsub!(args.unwanted, args.replacement)
+      tv.name.conform!
+      self::rename tv, args
     end
   end
   
-  def self.long_lormat(episode)
-  	episode.gsub!('Season ', 'S0')
-  	episode.gsub!(' Episode ', 'E')
-  	episode.gsub!('EP', 'E');
-  	[ 'season', 'episode', 'SERIES', 'EPISODE' ].each { |e| episode.gsub!(e, '') }
-  	(1960..Time.new.year).each { |val| episode.gsub!(val.to_s, '') }
-  end
-  
-  def self.regexes(episode)
-    episode.gsub!(/((\d\d)(\d\d))/) { " S#{$2}E#{$3}" }
-  	episode.gsub!(/((\d\d)x(\d\d))/) { " S#{$2}E#{$3}" }
-  	episode.gsub!(/((\d)x(\d\d))/) { " S0#{$2}E#{$3}" }
-  	episode.gsub!(/(\s(\d)(\d\d))/) { " S0#{$2}E#{$3}" }
-    episode.gsub!(/(.*?)[Ss](\d\d.*)/) { "#{$1}S#{$2}" }  
-    episode.gsub!(/(.*?\s[Ee])\s(.*)/) { "#{$1}#{$2}" }   	
-   	episode.gsub!(/(.*?)([EeSs])(\d\d)/) { "#{$1}#{$2.capitalize}#{$3}" }
-   	episode.gsub!(/(.*[Ee]\d\d).*/) { $1 }
-   	episode.gsub!(/(.*[Ss]\d\d)(\d\d).*/) { "#{$1}E#{$2}" }
-   	episode.gsub!(/(.*)([Ss]\d[^\s].*)/) { "#{$1} #{$2}" }   	
-   	episode.gsub!(/(.*)[Xx]([Ee].*)/) { "#{$1}#{$2}" }
-   	episode.gsub!(/(.*\d\d)[Ee](\d\d.*)/) { "#{$1}E#{$2}" }  
-   	episode.gsub!(/\s\s+/, "\s"); 
-   	episode.gsub!(/(S\d\d)\s(E\d\d.*)/) { "#{$1}#{$2}" }    	
-   	episode.gsub!(episode, $1) if (episode =~ /(.*?\sS\d\dE\d\d)(.*)/)
-  end
-  
-  def self.conform_to_regex(file)
-  	episode = Episode.new(file)
-  	season = "0#{season.to_i}" if season.to_i < 10
-  	temp = @opts.regex
-  	temp.gsub!("\(season\)", episode.season)
-  	temp.gsub!("\(episode\)", episode.episodeNo)
-  	temp.gsub!("show", episode.show)
-  	file = temp
-  end
-  
-  def self.rename(tv) 
-    return unless (tv.name =~ /(.*)\sS(\d{2})E(\d{2})/) and @opts.rename
+  def self.rename(tv, args) 
+    return unless (tv.name =~ /(.*)\sS(\d{2})E(\d{2})/) and args.rename
     directory = $1
     season = $2.to_i
-    if @opts.episode_name 
+    if args.episode_name 
       episode = Episode.new($1, $2, $3)
       episode.episode_name
       tv.name = "#{episode}"
@@ -128,15 +154,15 @@ module TVRenamer
     orig = tv.orig_name
     name = "#{tv.name}.#{tv.ext}"
     
-    if @opts.create and not @opts.move
+    if args.create and not args.move
       FileUtils.mkdir_p("#{dir}/#{directory}/Season #{season}");
       AutoWarez::rename(tv, "#{dir}/#{orig}", "#{dir}/#{directory}/Season #{season}/#{name}") 
-    elsif @opts.create and @opts.move
+    elsif args.create and args.move
       FileUtils.mkdir_p("#{@tv}/#{directory}/Season #{season}")
-      AutoWarez::rename(tv, "#{dir}/#{orig}", "#{@opts.tv}/#{directory}/Season #{season}/#{name}")
-    elsif not @opts.create and @opts.move
-      AutoWarez::rename(tv, "#{dir}/#{orig}", "#{@opts.tv}/#{name}")    
-    elsif not @opts.create and not @opts.move
+      AutoWarez::rename(tv, "#{dir}/#{orig}", "#{args.tv}/#{directory}/Season #{season}/#{name}")
+    elsif not args.create and args.move
+      AutoWarez::rename(tv, "#{dir}/#{orig}", "#{args.tv}/#{name}")    
+    elsif not args.create and not args.move
       AutoWarez::rename(tv, "#{dir}/#{orig}", "#{dir}/#{name}")
     end
   end
