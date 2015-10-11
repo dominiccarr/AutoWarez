@@ -1,0 +1,10 @@
+X Men=X-Men
+Spider Man=Spider-Man
+Spider Men=Spider-Men
+X Force=X-Force
+X Factor=X-Factor
+X Treme=X-Treme
+Super Heroes=Super-Heroes
+All Star=All-Star
+&=And
+'=REMOVE

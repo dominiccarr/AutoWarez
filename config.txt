@@ -1,0 +1,4 @@
+TV_REGEX: show S(season)E(episode)
+API_KEY: TlxxsaAAKJ6EcTEpEvdr
+TV_RAGE_RSS: http://www.tvrage.com/myrss.php?tid=47923&hash=9ab335970236b514eabdb26187e996d5
+
