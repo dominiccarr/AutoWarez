@@ -1,6 +1,5 @@
 require_relative 'Comics.rb'
 require_relative 'TVMaze.rb'
-require_relative 'AutoWarez.rb'
 require 'getoptlong'
 
 def main

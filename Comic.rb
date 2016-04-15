@@ -1,14 +1,15 @@
 class Comic
   attr_accessor :title, :publisher, :info
 
-	def initialize(title, publisher, issue_num) 
+	def initialize(title, publisher, issue_num, raw="") 
 		@title = title
 		@publisher = publisher
 		@issue_num = issue_num
+        @raw = raw
 	end
 	
 	def reprint?
-	  @info =~ /(.*)2ND PTG(.*)/ or @info =~ /(.*)3RD PTG(.*)/ or  @info =~ /(.*)4TH PTG(.*)/
+	  @info =~ /(.*)2ND PTG(.*)/ or @info =~ /(.*)3RD PTG(.*)/ or  @info =~ /(.*)4TH PTG(.*)/ or @info =~ /(.*)POSTER(.*)/
   end
 	
 	def display

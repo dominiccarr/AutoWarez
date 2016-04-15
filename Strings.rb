@@ -1,4 +1,7 @@
 module StringExtensions
+  
+  attr_accessor :original_name
+  
   def is_comic?
     is?([ "cbr", "cbz"])
   end
@@ -31,33 +34,46 @@ module StringExtensions
   def ext
     name = split(".")[-1].downcase
   end
+  
+  def clean!
+    gsub!(".#{ext}", '')
+    gsub!("AwesomeDL.com_", '')
+    gsub!(/\_|\[|\]|\(|\)|\#|\+/, " ")
+    strip!
+  	gsub!(/\s+/, "\s")
+  	gsub!("-", " ") if is_tv?
+  	gsub!("&#x27;", "'")
+  	gsub!("&#x26;", "&")
+  	gsub!("&\s39;", "'")
+  	gsub!("[\W&&[^\s-\.]]", "")
+  	gsub!(/^(.)/) { |m| $1.capitalize }
+    gsub!(/\s(.)/) { |m| "\s#{$1.capitalize}" }
+  end
+  
+  def transform!(unwanted, replacement)
+    @original_name = self.clone
+    extension = ext.downcase
+    clean!
+    gsub!(/#{unwanted}/, replacement)
+    gsub!(/\w+/) { |w| w.capitalize }
+    conform!
+    self << ".#{extension}"
+  end
+  
 end
 
-module BBCode
-  def bold 
-    "[b]#{self}[/b]"
-	end
-	
-	def italic
-		"[i]#{self}[i]"
-	end
-
-	def print_size(b) 
-		"[size=#{b}]#{self}[/size]"
-	end
-
-	def color(b)
-		"[color=#{b}]#{self}[/color]"
-	end
-
-	def image 
-		"[img]#{self}[/img]"
-	end
-
-	def code
-	  "[code]#{self}[/code]"
-	end
+module FileExtensions
+   def File.hidden?(arg)
+      return arg =~ /^\..*/
+   end
 end
 
-String.send(:include, BBCode)
+module DirExtensions
+  def name
+    return path.split("/")[-1]
+  end
+end
+
+File.send(:include, FileExtensions)
+Dir.send(:include, DirExtensions)
 String.send(:include, StringExtensions)

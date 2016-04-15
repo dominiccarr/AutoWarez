@@ -3,8 +3,7 @@ require 'rubygems'
 require 'googleajax'
 require_relative 'Comic.rb'
 require_relative 'Strings.rb'
-require_relative 'FileExt.rb'
-require_relative 'AutoWarez.rb'
+require_relative 'ComicWarez.rb'
 
 module Comics
   @@chan_search = "http://rs.4chan.org/?s="
@@ -22,6 +21,7 @@ module Comics
     array = self::read_in(@@comic_link).split("\n")
     array.each do |elem|
         if elem =~ /^\w\w\w\d{4,}\s{1,}(.*?)(\s#\d{1,3})(\.\d)?(.*)\s\$/
+            raw = $1
             title = $1.swapcase
             info = $4
             fractional = $3
@@ -105,52 +105,38 @@ module Comics
     hash.each &block 
     puts "Series effected = #{$counter}"    
   end
-  
+    
   def self.download_check(dir)
-    AutoWarez::options.print = false
-    AutoWarez::renamer(dir)
-    all = Comics::new_comics
-    comics = all["DC COMICS"] + all["MARVEL COMICS"] + all["IMAGE COMICS"] + all["COMICS & GRAPHIC NOVELS"] + all["DARK HORSE COMICS"]
-    comics.select! { |i| not i.reprint? }
-    downloads = Dir.new(dir).entries.select { |file| file.is_comic? }
-    downloads.map! do |comic| 
-      comic = comic.split(".")[0...-1].join("")
-      Comics::replace(comic) 
-    end
-    comics.select { |comic| not downloads.include? Comics::replace(comic.display) }
-  end
-  
-  def self.download_check2(dir)
-    AutoWarez::options.print = false
-    AutoWarez::renamer(dir)
-    all = Comics::new_comics
     res = {}
-    comics = ["DC COMICS", "MARVEL COMICS", "IMAGE COMICS", "COMICS & GRAPHIC NOVELS", "DARK HORSE COMICS"]
-    comics.each do |pub|
-      books = all[pub]
+    Comics::new_comics.each do |pub, values|
+      books = values
       books.select! { |i| not i.reprint? }
       downloads = Dir.new(dir).entries.select { |file| file.is_comic? }
       downloads.map! do |comic| 
         comic = comic.split(".")[0...-1].join("")
         Comics::replace(comic) 
+       # puts comic
       end
+        puts "#{pub} --------- \n\n"
+#        books.each { |comic| puts "allnewinhumans006 #{Comics::replace(comic.display)} #{"allnewinhumans006" == Comics::replace(comic.display)}" }
+        
       books = books.select { |comic| not downloads.include? Comics::replace(comic.display) }
+        puts books
       res[pub] = books
     end
     return res
   end
   
   def self.dowload_check_printer(dir)
-    puts "#{"-" * 30 }"
-    AutoWarez::options.print= false
-    AutoWarez::renamer(dir)
-    comics = self::download_check2(dir)
-    puts "DOWNLOAD LIST" 
+    warez = Warez.new
+    warez.options.print = false
+    warez.options.dir = dir
+    warez.run(ComicRenamer.new, false)
+    
+    comics = self::download_check(dir)
     comics.each do |pub, list| 
-      puts "#{"-" * 30 }"
-      puts pub
-      puts "#{"-" * 30 }"
-      list.each { |comic| puts "\t#{comic.display}" }
+      puts "#{"-" * 15 } #{pub} #{"-" * 15 } "
+      list.each { |comic| puts "\s\s#{comic}" }
     end 
     puts "No Downloads!" if comics.empty?
     puts "#{"-" * 30 }"
@@ -158,8 +144,9 @@ module Comics
   
   def self.replace(arg)
     arg.downcase!
-    arg.gsub!(/(\s[Vv]\d)|[Tt]he|\_|\-/, "")
+    arg.gsub!(/(\s[Vv]\d)|[Tt]he|\_|\-|,/, "")
     arg.gsub!(/\s+/, "\s")
+    arg.gsub!(/\s/, "")
     arg.gsub!(/\./, "")
     arg.strip!
     arg
@@ -181,7 +168,7 @@ module Comics
         link = $1
         if link.include? term
           puts "#{url}thread/#{link}" 
-          return "#{url}thread/#{link}"
+          # return "#{url}thread/#{link}"
         end
       }
     end
@@ -191,6 +178,6 @@ end
 
 if __FILE__ == $0
   # Comics::dowload_check_printer("/Users/dominiccarr/Downloads")
-  Comics::search('r', 'facebook')
-  
+  # Comics::search('co', 'win')
+    Comics::new_comics
 end

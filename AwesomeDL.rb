@@ -14,22 +14,27 @@ module AwesomeDL
     begin
       links = []
       puts "#{search_term}\n"
-      source = open("http://awesomedl.ru/?s=#{URI::encode(search_term)}&x=0&y=0", &:read)
-      search_term = search_term.gsub(/'/, "&#8217;")
+      # source = open("http://awesomedl.ru/?s=#{URI::encode(search_term)}&x=0&y=0", &:read)
+      
+      (1..6).each { |num|
+        source = open("http://awesomedl.ru/page/#{num}", &:read)
+      
+        search_term = search_term.gsub(/'/, "&#8217;")
 
-      source.gsub(/<h2 class="title"><a href="(.*?)" title="Permalink to #{search_term}.* rel="bookmark">.*<\/a><\/h2>/i) {
-        links << self::extract_mega_links($1)
+        source.gsub(/<h2 class="title"><a href="(.*?)" title="Permalink to #{search_term}.* rel="bookmark">.*<\/a><\/h2>/i) {
+          links << self::extract_rg_links($1)
+        }
       }
-      links.flatten!
-      Clipboard::to_clipboard(links.join(" , "))
+#      links.flatten!
+#      Clipboard::to_clipboard(links.join(" , "))
     rescue OpenURI::HTTPError
       puts "HTTP Error"
     end
     
   end
   
-  def self.extract_mega_links(link)
-    re = /<a href=".*?(https:\/\/goo.gl\/\w*)">Mega<\/a>/
+  def self.extract_rg_links(link)
+      re = /"(http:\/\/rapidgator.net\/file\/\w+\/.+?)">RapidGator<\/a>/m
     extract_links(link, re)
   end
   
@@ -40,6 +45,7 @@ module AwesomeDL
     source.gsub(re) {
       puts "LINK: #{$1}"
       links << $1
+        `open -a "Firefox" #{$1}`
     }
     links
   end
