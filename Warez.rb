@@ -24,6 +24,10 @@ module Root
   
 end
 
+class GetoptLong
+  attr_accessor :canonical_names
+end
+
 class Warez
   include Root
   attr_accessor :options
@@ -80,20 +84,13 @@ class Warez
       [ "--root", "-p", GetoptLong::NO_ARGUMENT ],
       [ "--list", "-l", GetoptLong::NO_ARGUMENT ],
       [ "--monitor", "-g", GetoptLong::NO_ARGUMENT ]
-      )    
+      ) 
+      
       opts.each do |opt, arg|
         case opt
         when "--list"
-          @list = true
-          puts "-r - replacement"
-          puts "-u - unwanted"
-          puts "-d - directory"
-          puts "-c - create folders"
-          puts "-e - unrar"
-          puts "-m - move to predefined folders"
-          puts "-p - move to root"
-          puts "-l - list"
-          puts "-b - appends names to TV episodes"
+          # @list = true
+          puts opts.canonical_names.values.uniq
           exit # end the program
         when "--dir"
           @options.dir = arg
