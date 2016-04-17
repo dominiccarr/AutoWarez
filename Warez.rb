@@ -89,7 +89,6 @@ class Warez
       opts.each do |opt, arg|
         case opt
         when "--list"
-          # @list = true
           puts opts.canonical_names.values.uniq
           exit # end the program
         when "--dir"
