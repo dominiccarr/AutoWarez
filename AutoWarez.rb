@@ -7,6 +7,12 @@ module Strings
     gsub!(/\./, " ")
     gsub!(/\s(.)/) { |m| "\s#{$1.capitalize}" }
     long_lormat!
+    # hack to deal with The 100
+    if self =~ /(The 100 )[Ss](\d\d)[eE](\d\d).*/
+      name = "#{$1}S#{$2}E#{$3}"
+      gsub!(self, name)
+      return
+    end
     regex!
   end
   
@@ -20,26 +26,25 @@ module Strings
   
   def regex!
     gsub!(/((\d\d)(\d\d))/) { " S#{$2}E#{$3}" }
-  	gsub!(/((\d\d)x(\d\d))/) { " S#{$2}E#{$3}" }
-  	gsub!(/((\d)x(\d\d))/) { " S0#{$2}E#{$3}" }
-  	gsub!(/(\s(\d)(\d\d))/) { " S0#{$2}E#{$3}" }
-    gsub!(/(.*?)[Ss](\d\d.*)/) { "#{$1}S#{$2}" }  
-    gsub!(/(.*?\s[Ee])\s(.*)/) { "#{$1}#{$2}" }   	
-   	gsub!(/(.*?)([EeSs])(\d\d)/) { "#{$1}#{$2.capitalize}#{$3}" }
-   	gsub!(/(.*[Ee]\d\d).*/) { $1 }
-   	gsub!(/(.*[Ss]\d\d)(\d\d).*/) { "#{$1}E#{$2}" }
-   	gsub!(/(.*)([Ss]\d[^\s].*)/) { "#{$1} #{$2}" }   	
-   	gsub!(/(.*)[Xx]([Ee].*)/) { "#{$1}#{$2}" }
-   	gsub!(/(.*\d\d)[Ee](\d\d.*)/) { "#{$1}E#{$2}" }  
-   	gsub!(/\s\s+/, "\s"); 
-   	gsub!(/(S\d\d)\s(E\d\d.*)/) { "#{$1}#{$2}" }    	
-   	gsub!(self, $1) if (self =~ /(.*?\sS\d\dE\d\d)(.*)/)
+    gsub!(/((\d\d)x(\d\d))/) { " S#{$2}E#{$3}" }
+    gsub!(/((\d)x(\d\d))/) { " S0#{$2}E#{$3}" }
+    gsub!(/(\s(\d)(\d\d))/) { " S0#{$2}E#{$3}" }
+    gsub!(/(.*?)[Ss](\d\d.*)/) { "#{$1}S#{$2}" }
+    gsub!(/(.*?\s[Ee])\s(.*)/) { "#{$1}#{$2}" }
+     gsub!(/(.*?)([EeSs])(\d\d)/) { "#{$1}#{$2.capitalize}#{$3}" }
+     gsub!(/(.*[Ee]\d\d).*/) { $1 }
+     gsub!(/(.*[Ss]\d\d)(\d\d).*/) { "#{$1}E#{$2}" }
+     gsub!(/(.*)([Ss]\d[^\s].*)/) { "#{$1} #{$2}" }
+     gsub!(/(.*)[Xx]([Ee].*)/) { "#{$1}#{$2}" }
+     gsub!(/(.*\d\d)[Ee](\d\d.*)/) { "#{$1}E#{$2}" }
+     gsub!(/\s\s+/, "\s");
+     gsub!(/(S\d\d)\s(E\d\d.*)/) { "#{$1}#{$2}" }
+     gsub!(self, $1) if (self =~ /(.*?\sS\d\dE\d\d)(.*)/)
   end
   
 end
 
 class TVRenamer < Renamer
-  
   
   def initialize
     super
@@ -53,7 +58,14 @@ class TVRenamer < Renamer
   def rename(name) 
     super name
     
+    # handle non-tv videos
+    if name.is_video? and not (name =~ /(.*)\sS(\d{2})E(\d{2})/) and args.move
+      orig = name.original_name
+      @warez.rename(name, "#{dir}/#{orig}", "#{args.tv}/#{name}") 
+    end
+    
     return unless (name =~ /(.*)\sS(\d{2})E(\d{2})/) and args.rename
+    
     directory = $1
     season = $2.to_i
     if args.episode_name 

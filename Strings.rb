@@ -7,6 +7,10 @@ module StringExtensions
   end
 
   def is_tv?
+  	is_video?
+  end
+  
+  def is_video?
   	is?([ "mov", "avi", "rmvb", "wmv", "mkv", "mp4", "mpeg", "divx", "rm", "flv", "mpg", "m4v", "3gp" ])
   end
   
