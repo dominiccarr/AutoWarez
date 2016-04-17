@@ -94,6 +94,7 @@ class Warez
           puts "-p - move to root"
           puts "-l - list"
           puts "-b - appends names to TV episodes"
+          exit # end the program
         when "--dir"
           @options.dir = arg
         when "--unwanted"
