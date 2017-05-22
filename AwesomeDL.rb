@@ -10,23 +10,24 @@ require_relative "Clipboard.rb"
 module AwesomeDL
   include Clipboard
   
-  def self.episodes(search_term)
-    begin
-      links = []
-      puts "#{search_term}\n"
-      # source = open("http://awesomedl.ru/?s=#{URI::encode(search_term)}&x=0&y=0", &:read)
-      
-      (1..6).each { |num|
-        source = open("http://awesomedl.ru/page/#{num}", &:read)
-      
+  def self.episodes(searches)
+    begin   
+      # gather the 6 most recent pages
+      source = []   
+      (1..6).each do |num|
+        source << open("http://awesomedl.ru/page/#{num}", &:read)
+      end
+      # search for each show
+      searches.each do |search_term|
+        puts "#{search_term}\n"
         search_term = search_term.gsub(/'/, "&#8217;")
-
-        source.gsub(/<h2 class="title"><a href="(.*?)" title="Permalink to #{search_term}.* rel="bookmark">.*<\/a><\/h2>/i) {
-          links << self::extract_rg_links($1)
-        }
-      }
-#      links.flatten!
-#      Clipboard::to_clipboard(links.join(" , "))
+        
+        source.each do |page|
+          page.gsub(/<h2 class="title"><a href="(.*?)" title="Permalink to #{search_term}.* rel="bookmark">.*<\/a><\/h2>/i) {
+            links = self::extract_rg_links($1)
+          }
+        end
+      end
     rescue OpenURI::HTTPError
       puts "HTTP Error"
     end
@@ -34,7 +35,7 @@ module AwesomeDL
   end
   
   def self.extract_rg_links(link)
-      re = /"(http:\/\/rapidgator.net\/file\/\w+\/.+?)">RapidGator<\/a>/m
+    re = /"(http:\/\/rapidgator.net\/file\/\w+\/.+?)">RapidGator<\/a>/m
     extract_links(link, re)
   end
   
@@ -45,21 +46,22 @@ module AwesomeDL
     source.gsub(re) {
       puts "LINK: #{$1}"
       links << $1
-        `open -a "Firefox" #{$1}`
+      `open -a "Firefox" #{$1}`
     }
     links
   end
   
   def self.today()
+    searches = []
     links = TVMaze.get_by_air_date.each do |episode| 
       next if episode.show == nil
       title = episode.show.gsub(/\(\d+\)/, "")
       title.gsub!(/\((\w+)\)/) { $1 }
       title.gsub!(/\s{1,}/, " ")
       title.rstrip!
-      search_term = "#{title} Season #{episode.season.to_i}, Episode #{episode.episode_no.to_i}"
-      self.episodes(search_term)
+      searches << search_term = "#{title} Season #{episode.season.to_i}, Episode #{episode.episode_no.to_i}"
     end
+    self.episodes(searches)
     TVMaze.delete!
   end
   

@@ -4,6 +4,7 @@ require_relative 'Warez.rb'
 module Strings
     
   def conform!
+  gsub!('#', '0')
     gsub!(/(.*?\d{2,}(\.\d){0,1}).*/) { $1 }
     gsub!(/\s(\d{2,3})/) do |match|
       length = 3 - match.to_i.to_s.length

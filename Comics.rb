@@ -1,6 +1,7 @@
 require 'net/http'
 require 'rubygems'
 require 'googleajax'
+require 'openssl'
 require_relative 'Comic.rb'
 require_relative 'Strings.rb'
 require_relative 'ComicWarez.rb'
@@ -8,11 +9,15 @@ require_relative 'ComicWarez.rb'
 module Comics
   @@chan_search = "http://rs.4chan.org/?s="
   @@co = "http://boards.4chan.org/co/"
-	@@comic_link = "http://www.previewsworld.com/shipping/newreleases.txt"
+  @@comic_link = "https://www.previewsworld.com/shipping/newreleases.txt"
   
   def self.read_in(url) 
-    res = Net::HTTP.get_response(URI.parse(url))
-    res.body
+	uri = URI.parse(url)
+	http = Net::HTTP.new(uri.host, uri.port)
+	http.use_ssl = true
+	http.verify_mode = OpenSSL::SSL::VERIFY_NONE # read into this
+	data = http.get(uri.request_uri)
+	return data.body
   end
 
   def self.new_comics
@@ -107,6 +112,7 @@ module Comics
   end
     
   def self.download_check(dir)
+	Comics::run_warez(dir)
     res = {}
     Comics::new_comics.each do |pub, values|
       books = values
@@ -115,23 +121,26 @@ module Comics
       downloads.map! do |comic| 
         comic = comic.split(".")[0...-1].join("")
         Comics::replace(comic) 
-       # puts comic
       end
-        puts "#{pub} --------- \n\n"
-#        books.each { |comic| puts "allnewinhumans006 #{Comics::replace(comic.display)} #{"allnewinhumans006" == Comics::replace(comic.display)}" }
         
       books = books.select { |comic| not downloads.include? Comics::replace(comic.display) }
-        puts books
       res[pub] = books
     end
+	res.delete("MERCHANDISE")
+	res.delete("MAGAZINES")
+	res.delete("IDW PUBLISHING")
     return res
   end
   
-  def self.dowload_check_printer(dir)
-    warez = Warez.new
+  def self.run_warez(dir)
+	warez = Warez.new
     warez.options.print = false
     warez.options.dir = dir
     warez.run(ComicRenamer.new, false)
+  end
+  
+  def self.dowload_check_printer(dir)
+	Comics::run_warez(dir)
     
     comics = self::download_check(dir)
     comics.each do |pub, list| 

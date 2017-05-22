@@ -57,6 +57,7 @@ module StringExtensions
   def transform!(unwanted, replacement)
     @original_name = self.clone
     extension = ext.downcase
+	gsub!('TwoDDL_', '')
     clean!
     gsub!(/#{unwanted}/, replacement)
     gsub!(/\w+/) { |w| w.capitalize }

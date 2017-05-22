@@ -64,7 +64,7 @@ class Warez
       FileUtils.rm silly_file if File.exists? silly_file
       class_name.handle self
       dirs = directory.select { |c| File.directory?("#{dir}/#{c}") }
-      dirs.each { |x| renamer("#{dir}/#{x}") if @options.recursive }
+      dirs.each { |x| renamer("#{dir}/#{x}", class_name) if @options.recursive }
     end
     
     def parse_args
