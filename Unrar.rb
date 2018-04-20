@@ -29,4 +29,6 @@ module Unrar
     
 end
 
-Unrar.handle(ARGV[0])
+if __FILE__ == $0 
+ 	Unrar.handle(ARGV[0])
+end

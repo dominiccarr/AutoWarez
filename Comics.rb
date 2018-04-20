@@ -25,7 +25,7 @@ module Comics
     publisher = 'DC COMICS'
     array = self::read_in(@@comic_link).split("\n")
     array.each do |elem|
-        if elem =~ /^\w\w\w\d{4,}\s{1,}(.*?)(\s#\d{1,3})(\.\d)?(.*)\s\$/
+        if elem =~ /^\w\w\w\d{4,}\s{1,}(.*?)(\s#\d{1,4})(\.\d)?(.*)\s\$/
             raw = $1
             title = $1.swapcase
             info = $4
@@ -36,7 +36,7 @@ module Comics
             comic.info = info.strip!
             comics[publisher] ||= []
             comics[publisher] << comic
-        elsif elem =~ /^([(^\$)\&a-zA-Z\s]){2,}$/
+        elsif elem =~ /^([(^\$)\&a-z\.A-Z\s]){2,}$/
           publisher = elem.rstrip
         end
     end

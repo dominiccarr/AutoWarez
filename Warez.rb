@@ -1,5 +1,6 @@
 require_relative 'Strings.rb'
 require_relative 'Options.rb'
+require_relative 'Unrar.rb'
 require 'rubygems'
 require "ftools"
 require 'getoptlong'
@@ -59,11 +60,14 @@ class Warez
         return
       end
       printer "Operating On: #{dir}"
-      directory = Dir.new(dir).entries
       silly_file = "#{dir}/Thanks_You_For_Download.txt"
+		Unrar.handle(dir) if @options.unrar
+		      directory = Dir.new(dir).entries
+
       FileUtils.rm silly_file if File.exists? silly_file
       class_name.handle self
       dirs = directory.select { |c| File.directory?("#{dir}/#{c}") }
+		
       dirs.each { |x| renamer("#{dir}/#{x}", class_name) if @options.recursive }
     end
     
