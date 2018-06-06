@@ -122,7 +122,6 @@ module Comics
         comic = comic.split(".")[0...-1].join("")
         Comics::replace(comic) 
       end
-        
       books = books.select { |comic| not downloads.include? Comics::replace(comic.display) }
       res[pub] = books
     end
@@ -139,13 +138,11 @@ module Comics
     warez.run(ComicRenamer.new, false)
   end
   
-  def self.dowload_check_printer(dir)
-	Comics::run_warez(dir)
-    
+  def self.dowload_check_printer(dir)    
     comics = self::download_check(dir)
     comics.each do |pub, list| 
       puts "#{"-" * 15 } #{pub} #{"-" * 15 } "
-      list.each { |comic| puts "\s\s#{comic}" }
+      list.each { |comic| puts "-- #{comic}" }
     end 
     puts "No Downloads!" if comics.empty?
     puts "#{"-" * 30 }"

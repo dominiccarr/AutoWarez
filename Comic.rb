@@ -18,7 +18,7 @@ class Comic
 
 	def to_s 
 	  string = display
-	  string << " --- #{info}" if info != ""
+	  string << " --- #{info}" if info and info.strip != ""
     string
 	end
 	
