@@ -5,8 +5,9 @@ require_relative 'Episode.rb'
 
 module TVMaze
   
-  TEMP = "/Users/dominiccarr/Downloads"
-  URI = "http://api.tvmaze.com/ical/followed?token=JMFOWpvrNabTUvkesHTR8hdADMob6Srm"
+  TEMP = "/Users/user/Downloads"
+  TOKEN = "JMFOWpvrNabTUvkesHTR8hdADMob6Srm"
+  URI = "http://api.tvmaze.com/ical/followed?token=#{TOKEN}"
   PATH = "#{TEMP}/tv.ics"
   
   def self.get_calendar
@@ -29,7 +30,7 @@ module TVMaze
       date_aired = Date.parse(event.dtstart)
       date_aired == date
     end
-    
+        
     events.map! { |episode| Episode.new(episode.summary) }
     events.select! { |episode| episode.show != nil }
 
@@ -46,7 +47,7 @@ module TVMaze
     puts "#{Date::DAYNAMES[(Date.today+1).wday]}"
     TVMaze::get_by_air_date(Date.today).each { |ep| puts "\t #{ep}"}
     puts "#{Date::DAYNAMES[(Date.today+2).wday]}"
-    TVMaze::get_by_air_date(Date.today+1).each { |ep| puts "\t #{ep}"}
+    TVMaze::get_by_air_date(Date.today+2).each { |ep| puts "---- #{ep}"}
     self.delete!
   end
   
@@ -55,5 +56,3 @@ end
 if __FILE__ == $0
   TVMaze.schedule
 end
-
-

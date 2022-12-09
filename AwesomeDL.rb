@@ -15,26 +15,27 @@ module AwesomeDL
       # gather the 6 most recent pages
       source = []   
       (1..6).each do |num|
-        source << open("http://awesomedl.ru/page/#{num}", &:read)
+        source << open("https://www.scnsrc.me/category/tv/page/#{num}", &:read)
       end
+      # puts source[0]
       # search for each show
       searches.each do |search_term|
-        puts "#{search_term}\n"
         search_term = search_term.gsub(/'/, "&#8217;")
         
         source.each do |page|
-          page.gsub(/<h2 class="title"><a href="(.*?)" title="Permalink to #{search_term}.* rel="bookmark">.*<\/a><\/h2>/i) {
+          page.gsub(/<h2><a href="(.*?)" rel="bookmark" title="Go to #{search_term}.*>/i) {
             links = self::extract_rg_links($1)
           }
         end
       end
-    rescue OpenURI::HTTPError
-      puts "HTTP Error"
+    rescue OpenURI::HTTPError => e
+      puts e
     end
     
   end
   
   def self.extract_rg_links(link)
+    puts(link)
     re = /"(http:\/\/rapidgator.net\/file\/\w+\/.+?)">RapidGator<\/a>/m
     extract_links(link, re)
   end
@@ -53,7 +54,10 @@ module AwesomeDL
   
   def self.today()
     searches = []
-    links = TVMaze.get_by_air_date.each do |episode| 
+    res = TVMaze.get_by_air_date
+    puts res
+    
+    res.each do |episode| 
       next if episode.show == nil
       title = episode.show.gsub(/\(\d+\)/, "")
       title.gsub!(/\((\w+)\)/) { $1 }
@@ -66,19 +70,19 @@ module AwesomeDL
   end
   
   def self.main
-    opts = GetoptLong.new([ "--show", "-s", GetoptLong::REQUIRED_ARGUMENT],
-    [ "--today", "-t", GetoptLong::NO_ARGUMENT])
-
-    opts.each do |opt, arg|
-      case opt
-      when "--show"
-        AwesomeDL::episodes(arg)
-      when "--today"
-        AwesomeDL::today
-      end
-    end
+    AwesomeDL::episodes(["So Help Me Todd"])
+  #   opts = GetoptLong.new([ "--show", "-s", GetoptLong::REQUIRED_ARGUMENT],
+  #   [ "--today", "-t", GetoptLong::NO_ARGUMENT])
+  #
+  #   opts.each do |opt, arg|
+  #     case opt
+  #     when "--show"
+  #       AwesomeDL::episodes(arg)
+  #     when "--today"
+  #       AwesomeDL::today
+  #     end
+  #   end
   end
-  
 end
 
 if __FILE__ == $0
