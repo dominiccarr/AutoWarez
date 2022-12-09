@@ -42,6 +42,7 @@ module StringExtensions
   def clean!
     gsub!(".#{ext}", '')
     gsub!("AwesomeDL.com_", '')
+	gsub!("DDLValley.me_", '')
     gsub!(/\_|\[|\]|\(|\)|\#|\+/, " ")
     strip!
   	gsub!(/\s+/, "\s")

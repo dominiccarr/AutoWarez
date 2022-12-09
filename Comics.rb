@@ -142,7 +142,7 @@ module Comics
     comics = self::download_check(dir)
     comics.each do |pub, list| 
       puts "#{"-" * 15 } #{pub} #{"-" * 15 } "
-      list.each { |comic| puts "-- #{comic}" }
+      list.each { |comic| puts "-- C - #{comic}" }
     end 
     puts "No Downloads!" if comics.empty?
     puts "#{"-" * 30 }"
@@ -183,7 +183,5 @@ module Comics
 end
 
 if __FILE__ == $0
-  # Comics::dowload_check_printer("/Users/dominiccarr/Downloads")
-  # Comics::search('co', 'win')
     Comics::new_comics
 end

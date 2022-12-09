@@ -54,7 +54,7 @@ class Warez
       renamer @options.dir, namer unless @options.list
     end
     
-    def renamer(dir, class_name)
+    def renamer(dir, class_name, options=@options)
       if not dir
         puts "Please enter a directory. Usage 'ruby AutoWarez.rb --dir [path]'"
         return
@@ -67,8 +67,12 @@ class Warez
       FileUtils.rm silly_file if File.exists? silly_file
       class_name.handle self
       dirs = directory.select { |c| File.directory?("#{dir}/#{c}") }
-		
-      dirs.each { |x| renamer("#{dir}/#{x}", class_name) if @options.recursive }
+		  
+      dirs.delete(".")
+      dirs.delete("..")
+      # puts dirs.inspect
+      
+      dirs.each { |x| renamer("#{dir}/#{x}", class_name, @options) if @options.recursive }
     end
     
     def parse_args
